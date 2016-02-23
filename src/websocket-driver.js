@@ -3,14 +3,17 @@ import most from 'most'
 import io from 'socket.io-client'
 
 function makeSocketDriver(url) {
-  const socket = io(url)
+  const socket = io.connect(url)
+  console.log(socket)
 
   function get(eventName) {
     return most.create((add, end, error) => {
       const sub = socket.on(eventName, (message) => {
         add(message)
       })
-      return () => { sub.dispose() }
+      console.log('SUB:')
+      console.log(sub)
+      //return () => { sub.dispose() }
     })
   }
 

@@ -31,7 +31,7 @@ run(({WS, DOM, ROUTER}) => {
 
   const currentVTree$ = currentComponent$.map(({DOM}) => DOM).switch()
   const currentLocation$ = currentComponent$.map(({ROUTER}) => ROUTER).switch()
-  const currentWS = currentComponent$.map(({WS}) => WS ? WS : most.empty()).switch().tap(o => console.log(o))
+  const currentWS = currentComponent$.map(({WS}) => WS ? WS : most.empty()).switch()
 
   return {
     //DOM: most.of(h('div', [h('a', {props: {href: "/some/route"}}, ['/tako/A'])])),
