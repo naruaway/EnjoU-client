@@ -23,7 +23,7 @@ function root({DOM, ROUTER}) {
   }
 }
 
-run(({WS, DOM, ROUTER}) => {
+run(({WS, DOM, ROUTER, initialRoute$}) => {
   const currentComponent$ = ROUTER.define({
     '/': () => isolate(root)({DOM, ROUTER: ROUTER.path('/')}),
     '/:id': (id) => () => isolate(Chat)({WS, DOM, ROUTER: ROUTER.path('/'), id}),
@@ -36,10 +36,11 @@ run(({WS, DOM, ROUTER}) => {
   return {
     //DOM: most.of(h('div', [h('a', {props: {href: "/some/route"}}, ['/tako/A'])])),
     DOM: currentVTree$,
-    ROUTER: currentLocation$.merge(most.just('/')),
+    ROUTER: currentLocation$.merge(initialRoute$),
     WS: currentWS,
   }
 }, {
+  initialRoute$: () => most.of(location.pathname),
   DOM: makeDOMDriver('#app'),
   ROUTER: makeRouterDriver(createHistory()),
   WS: makeSocketDriver('http://localhost:8080/'),
