@@ -18,8 +18,7 @@ function intent({WS, DOM, ROUTER, id}) {
 }
 
 function model(actions) {
-  const addedText$ = most.merge(actions.postText$, actions.newText$)
-  return addedText$.scan((a, text) => [text, ...a], [])
+  return actions.newText$.scan((a, text) => [text, ...a], [])
 }
 
 function view(state, id) {
@@ -48,7 +47,10 @@ function Chat({WS, DOM, ROUTER, id}) {
   const state$ = model(actions)
   const VTree$ = state$.map(state => view(state, id))
 
-  const webSocket$ = actions.postText$.map(text => ({messageType: 'post message', message: text}))
+  const webSocket$ = most.merge(
+    actions.postText$.map(text => ({messageType: 'post message', message: text})),
+    most.of({messageType: 'join room', message: id})
+  )
 
   return {
     DOM: VTree$,
