@@ -12,12 +12,13 @@ function intent({WS, DOM, ROUTER, id}) {
       const value = elm.value
       elm.value = ''
       return value
-    }),
-    newText$: WS.map(({text}) => text),
+    }).multicast(),
+    newText$: WS.get('new text').map(({text}) => text),
   }
 }
 
 function model(actions) {
+  actions.postText$
   const addedText$ = most.merge(actions.postText$, actions.newText$)
   return addedText$.scan((a, text) => [text, ...a], [])
 }
@@ -47,7 +48,7 @@ function Chat({WS, DOM, ROUTER, id}) {
   const state$ = model(intent({WS, DOM, ROUTER, id}))
   const VTree$ = state$.map(state => view(state, id))
 
-  const webSocket$ = most.empty()
+  const webSocket$ = most.periodic(1000).constant({messageType: 'hoge', message: 'tako'})
 
   return {
     DOM: VTree$,

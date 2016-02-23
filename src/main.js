@@ -4,13 +4,12 @@ import {run} from '@motorcycle/core'
 import {makeDOMDriver, h} from '@motorcycle/dom'
 import {makeRouterDriver} from '@motorcycle/router'
 import {createHistory} from 'history'
-import {makeWebSocketMockDriver} from './websocket-driver.js'
+import {makeSocketDriver} from './websocket-driver'
 import isolate from '@cycle/isolate'
 import V from './view'
 import _ from 'lodash'
 import utils from './lib/utils'
 import Chat from './chat'
-
 
 function root({DOM, ROUTER}) {
   return {
@@ -32,7 +31,7 @@ run(({WS, DOM, ROUTER}) => {
 
   const currentVTree$ = currentComponent$.map(({DOM}) => DOM).switch()
   const currentLocation$ = currentComponent$.map(({ROUTER}) => ROUTER).switch()
-  const currentWS = currentComponent$.map(({WS}) => WS ? WS : most.empty()).switch()
+  const currentWS = currentComponent$.map(({WS}) => WS ? WS : most.empty()).switch().tap(o => console.log(o))
 
   return {
     //DOM: most.of(h('div', [h('a', {props: {href: "/some/route"}}, ['/tako/A'])])),
@@ -43,5 +42,5 @@ run(({WS, DOM, ROUTER}) => {
 }, {
   DOM: makeDOMDriver('#app'),
   ROUTER: makeRouterDriver(createHistory()),
-  WS: makeWebSocketMockDriver(),
+  WS: makeSocketDriver('http://localhost:8080/'),
 })

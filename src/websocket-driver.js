@@ -1,28 +1,34 @@
 import most from 'most'
-/*
-function makeWebSocketDriver(peerId) {
-  const sock = new WebSocket(peerId);
-  return function sockDriver(outgoing$) {
-    outgoing$.observe(outgoing => sock.send(outgoing));
-    const incoming$ = most.create((add, end, error) => {
-      sock.onmessage = message => add(message)
-      sock.onerror = error
-      return () => console.log('disposing websocket')
-    })
-    return incoming$
-  }
-}
-*/
 
-function makeWebSocketMockDriver() {
-  return (source$) => {
-    source$.observe(o => console.log(`[webSocketMockDriver] ${o}`))
-    const sink$ = most.periodic(1000).constant({text: 'Hello!'})
-    sink$.isolateSink = isolateSink
-    sink$.isolateSource = isolateSource
-    return sink$
+import io from 'socket.io-client'
+
+function makeSocketDriver(url) {
+  const socket = io(url)
+
+  function get(eventName) {
+    return most.create((add, end, error) => {
+      const sub = socket.on(eventName, (message) => {
+        add(message)
+      })
+      return () => { sub.dispose() }
+    })
+  }
+
+  function publish(messageType, message) {
+    socket.emit(messageType, message)
+  }
+
+  return event$ => {
+    event$.observe(event => publish(event.messageType, event.message));
+    return {
+      get,
+      dispose: socket.destroy.bind(socket)
+    }
   }
 }
+
+export default {makeSocketDriver}
+
 
 function isolateSource(incoming$, scope) {
   console.log('isolateSource')
@@ -33,4 +39,4 @@ function isolateSink(outgoing$, scope) {
   return outgoing$
 }
 
-export {makeWebSocketMockDriver}
+export {makeSocketDriver}
