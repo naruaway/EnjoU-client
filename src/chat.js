@@ -13,12 +13,13 @@ function intent({WS, DOM, ROUTER, id}) {
       elm.value = ''
       return value
     }).multicast(),
+    initialTexts$: WS.get('initial texts'),
     newText$: WS.get('new text').map(({text}) => text),
   }
 }
 
 function model(actions) {
-  return actions.newText$.scan((a, text) => [text, ...a], [])
+  return actions.initialTexts$.map(most.from).switch().merge(actions.newText$).scan((a, text) => [text, ...a], [])
 }
 
 function view(state, id) {
