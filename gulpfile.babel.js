@@ -2,7 +2,8 @@ import gulp from 'gulp'
 import browserify from 'browserify'
 import babelify from 'babelify'
 import source from 'vinyl-source-stream'
-import webserver from 'gulp-webserver'
+import Koa from 'koa'
+import fs from 'fs'
 
 gulp.task('js', function() {
   browserify('src/main.js', { debug: true })
@@ -35,13 +36,30 @@ gulp.task('watch', function() {
   gulp.watch('src/images/*.png', ['png'])
 })
 
-gulp.task('webserver', function() {
-  gulp.src('dest')
-    .pipe(webserver({
-      host: 'localhost',
-      livereload: true,
-    })
-  )
+gulp.task('webserver', () => {
+  const typeTable = {
+    'css': 'text/css',
+    'js': 'text/javascript',
+    'html': 'text/html',
+    'png': 'image/png',
+  }
+
+
+  const app = new Koa()
+  app.use(async (ctx, next) => {
+    await next();
+    if (fs.existsSync(`dest/${ctx.url}`) && !`dest/${ctx.url}`.endsWith('/')) {
+      if (typeTable[ctx.url.match(/\.(.+)/)[1]] === 'image/png') {
+        ctx.body = fs.readFileSync(`dest/${ctx.url}`)
+      } else {
+        ctx.body = fs.readFileSync(`dest/${ctx.url}`, 'utf8')
+      }
+      ctx.set('Content-Type', typeTable[ctx.url.match(/\.(.+)/)[1]])
+    } else {
+      ctx.body = fs.readFileSync('dest/index.html', 'utf8')
+    }
+  })
+  app.listen(8000)
 })
 
 gulp.task('default', ['js', 'css', 'html', 'png', 'watch', 'webserver'])
