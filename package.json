@@ -12,7 +12,7 @@
   "devDependencies": {
     "@cycle/isolate": "1.2.0",
     "@motorcycle/core": "1.1.0",
-    "@motorcycle/dom": "1.2.0",
+    "@motorcycle/dom": "1.2.1",
     "@motorcycle/history": "2.0.0",
     "@motorcycle/http": "2.2.0",
     "@motorcycle/router": "1.1.0",
