@@ -13,7 +13,7 @@ function intent({WS, DOM, ROUTER, id}) {
       elm.value = ''
       return value
     }).multicast(),
-    initialTexts$: WS.get('initial texts'),
+    initialTexts$: WS.get('initial messages'),
     newText$: WS.get('new text').map(({text}) => text),
   }
 }
@@ -44,13 +44,21 @@ function view(state, id) {
 }
 
 function Chat({WS, DOM, ROUTER, id}) {
+  const channelId = id
   const actions = intent({WS, DOM, ROUTER, id})
   const state$ = model(actions)
   const VTree$ = state$.map(state => view(state, id))
 
   const webSocket$ = most.merge(
-    actions.postText$.map(text => ({messageType: 'post message', message: text})),
-    most.of({messageType: 'join room', message: id})
+    actions.postText$.map(contents => ({type: 'send', value: {
+      eventName: 'post message',
+      value: {
+        contents,
+        score: 0,
+        replyTo: [],
+      }
+    }})),
+    most.of({type: 'connect', value: `ws://localhost:8080/api/channel/${channelId}`})
   )
 
   return {

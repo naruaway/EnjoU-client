@@ -1,32 +1,49 @@
 import most from 'most'
 
-import io from 'socket.io-client'
+function makeSocketDriver() {
+  let currentSocket = null
 
-function makeSocketDriver(url) {
-  const socket = io.connect(url)
+  const callbacks = new Map()
 
-  function get(eventName) {
-    return most.create((add, end, error) => {
-      const sub = socket.on(eventName, (message) => {
-        add(message)
-      })
+  function onmessage(event) {
+    const message = JSON.parse(event.data)
+    callbacks.forEach((eventName, fn) => {
+      if (message.eventName !== eventName) return
+      fn(message.value)
     })
   }
 
-  function publish(messageType, message) {
-    socket.emit(messageType, message)
+  function get(eventName) {
+    return most.create((add, end, error) => {
+      callbacks.set(add, eventName)
+      return () => {
+        callbacks.delete(add)
+      }
+    }).multicast()
   }
 
   return event$ => {
-    event$.observe(event => publish(event.messageType, event.message));
-    return {
-      get,
-      dispose: socket.destroy.bind(socket)
-    }
+    event$.observe(event => {
+      if (event.type === 'connect') {
+        const endpoint = event.value
+        if (currentSocket !== null) {
+          currentSocket.close()
+          currentSocket = null
+        }
+        currentSocket = new WebSocket(endpoint)
+        currentSocket.onmessage = onmessage
+      } else if (event.type === 'send') {
+        if (currentSocket === null) {
+          throw new Error('currentSocket must not be null while sending a value')
+        }
+        const value = event.value
+        currentSocket.send(JSON.stringify(value))
+      }
+    })
+
+    return {get}
   }
 }
-
-export default {makeSocketDriver}
 
 
 export {makeSocketDriver}

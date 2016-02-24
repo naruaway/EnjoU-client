@@ -43,5 +43,5 @@ run(({WS, DOM, ROUTER, initialRoute$}) => {
   initialRoute$: () => most.of(location.pathname),
   DOM: makeDOMDriver('#app'),
   ROUTER: makeRouterDriver(createHistory()),
-  WS: makeSocketDriver('http://localhost:8080/'),
+  WS: makeSocketDriver(),
 })
