@@ -15,8 +15,13 @@ gulp.task('js', function() {
 })
 
 gulp.task('css', function() {
-  gulp.src('src/*.css')
-    .pipe(gulp.dest('dest'))
+  const postcss    = require('gulp-postcss')
+  const sourcemaps = require('gulp-sourcemaps')
+  return gulp.src('src/**/*.css')
+    .pipe( sourcemaps.init() )
+    .pipe( postcss([ require('autoprefixer'), require('precss') ]) )
+    .pipe( sourcemaps.write('.') )
+    .pipe( gulp.dest('dest/') );
 })
 
 gulp.task('png', function() {
