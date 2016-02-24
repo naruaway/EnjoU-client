@@ -13,31 +13,27 @@ function intent({WS, DOM, ROUTER, id}) {
       elm.value = ''
       return value
     }).multicast(),
-    initialTexts$: WS.get('initial messages'),
-    newText$: WS.get('new text').map(({text}) => text),
+    initialMessages$: WS.get('initial messages'),
+    newMessage$: WS.get('new message'),
   }
 }
 
 function model(actions) {
-  return actions.initialTexts$.map(most.from).switch().merge(actions.newText$).scan((a, text) => [text, ...a], [])
+  return actions.initialMessages$.map(most.from).switch().merge(actions.newMessage$).scan((a, message) => [message, ...a], [])
+  .map(messages => ({
+    messages
+  }))
 }
 
-function view(state, id) {
+function view({messages}, id) {
   return h('div', [
            V.header(id),
            h('form#post', {props: {action: ''}}, [
              h('input#post-text', {props: {type: 'text', placeholder: 'type here', autocomplete: 'off'}}),
            ]),
            h('div.main', [
-             h('div.negative', [
-               h('ul', state.map(t => h('li', t))),
-             ]),
-             h('div.positive', [
-               h('ul', [
-                 h('li', 'fwae'),
-                 h('li', 'すごい'),
-                 h('li', 'やばい'),
-               ]),
+             h('div.messages', [
+               h('ul', messages.map(({contents}) => h('li', contents))),
              ]),
            ]),
          ])

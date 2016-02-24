@@ -23,17 +23,13 @@ header {
 }
 
 .main > * {
-  width: 50%;
+  width: 100%;
   padding: 1em;
   flex-direction: row;
 }
 
-.negative {
+.messages {
   background: rgba(255, 0, 0, 0.2);
-}
-
-.positive {
-  background: rgba(0, 0, 255, 0.2);
 }
 
 ul {
