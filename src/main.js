@@ -26,7 +26,7 @@ function root({DOM, ROUTER}) {
 run(({WS, DOM, ROUTER, initialRoute$}) => {
   const currentComponent$ = ROUTER.define({
     '/': () => isolate(root)({DOM, ROUTER: ROUTER.path('/')}),
-    '/:id': (id) => () => isolate(Chat)({WS, DOM, ROUTER: ROUTER.path('/'), id}),
+    '/:channelId': (channelId) => () => isolate(Chat)({WS, DOM, ROUTER: ROUTER.path('/'), id: channelId}),
   }).value$.map(f => f()).multicast()
 
   const currentVTree$ = currentComponent$.map(({DOM}) => DOM).switch()
@@ -34,7 +34,6 @@ run(({WS, DOM, ROUTER, initialRoute$}) => {
   const currentWS = currentComponent$.map(({WS}) => WS ? WS : most.empty()).switch()
 
   return {
-    //DOM: most.of(h('div', [h('a', {props: {href: "/some/route"}}, ['/tako/A'])])),
     DOM: currentVTree$,
     ROUTER: currentLocation$.merge(initialRoute$),
     WS: currentWS,

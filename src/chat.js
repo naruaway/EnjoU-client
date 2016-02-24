@@ -2,7 +2,7 @@ import most from 'most'
 import {h} from '@motorcycle/dom'
 import utils from './lib/utils'
 import V from './view'
-
+import {segment} from './lib/tiny-segmenter'
 
 function intent({WS, DOM, ROUTER, id}) {
   return {
@@ -19,16 +19,18 @@ function intent({WS, DOM, ROUTER, id}) {
 }
 
 function model(actions) {
-  return actions.initialMessages$.map(most.from).switch().merge(actions.newMessage$).scan((a, message) => [message, ...a], [])
-  .map(messages => ({
-    messages
-  }))
+  console.log('MODEL')
+  const messages$ = most.merge(actions.initialMessages$, actions.newMessage$).scan((a, c) => {
+    if (a === null) return c
+    return (a.push(c), a)
+  }, null).skip(1)
+  return messages$.map(messages => ({ messages }))
 }
 
 function view({messages}, id) {
   function createMessageElm(message) {
     return h('li', {style: {
-      color: `rgba(255, ${(message.score + 5) * 50}, 0, 1)`,
+      color: `rgba(0, ${(message.score + 5) * 50}, 0, 1)`,
     }}, message.contents)
   }
 
