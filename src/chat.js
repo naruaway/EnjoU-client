@@ -26,6 +26,12 @@ function model(actions) {
 }
 
 function view({messages}, id) {
+  function createMessageElm(message) {
+    return h('li', {style: {
+      color: `rgba(255, ${(message.score + 5) * 50}, 0, 1)`,
+    }}, message.contents)
+  }
+
   return h('div', [
            V.header(id),
            h('form#post', {props: {action: ''}}, [
@@ -33,7 +39,7 @@ function view({messages}, id) {
            ]),
            h('div.main', [
              h('div.messages', [
-               h('ul', messages.map(({contents}) => h('li', contents))),
+               h('ul', messages.map(createMessageElm))
              ]),
            ]),
          ])
