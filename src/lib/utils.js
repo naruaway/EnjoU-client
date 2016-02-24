@@ -1,5 +1,5 @@
 function makeCurrentLocation$(DOM) {
-  return DOM.select('*').events('click').filter(ev => {
+  return DOM.select('a.link').events('click').filter(ev => {
     if (ev.currentTarget.tagName !== 'A') return false
     const href = ev.currentTarget.getAttribute('href')
     if (!href.startsWith('/')) return false
