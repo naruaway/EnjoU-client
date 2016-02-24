@@ -2,6 +2,7 @@ import most from 'most'
 import {h} from '@motorcycle/dom'
 import utils from './lib/utils'
 import V from './view'
+import _ from 'lodash'
 import {segment} from './lib/tiny-segmenter'
 
 function intent({WS, DOM, ROUTER, id}) {
@@ -19,10 +20,9 @@ function intent({WS, DOM, ROUTER, id}) {
 }
 
 function model(actions) {
-  console.log('MODEL')
   const messages$ = most.merge(actions.initialMessages$, actions.newMessage$).scan((a, c) => {
     if (a === null) return c
-    return (a.push(c), a)
+    return (a.unshift(c), a)
   }, null).skip(1)
   return messages$.map(messages => ({ messages }))
 }
