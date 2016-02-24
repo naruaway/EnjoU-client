@@ -29,7 +29,7 @@ function model(actions) {
 
 function view({messages}, id) {
   function createMessageElm(message) {
-    return h('li', {style: {
+    return h('li', {key: message.messageId, style: {
       color: `rgba(0, ${(message.score + 5) * 50}, 0, 1)`,
     }}, message.contents)
   }
