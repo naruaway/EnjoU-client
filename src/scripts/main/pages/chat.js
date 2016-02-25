@@ -43,6 +43,7 @@ function intent(sources) {
     clickMessage$: DOM.select('span.message-contents').events('click')
       .map(ev => parseInt(ev.currentTarget.parentNode.dataset.id)),
 
+    clickHeader$: DOM.select('header.header').events('click'),
 
     initialMessages$: WS.get('initial messages'),
 
@@ -119,7 +120,7 @@ const selectedMessages$ = actions.changeText$
         }
       }
       return result
-    })::startsWith(m => m)
+    }).merge(actions.changeText$.constant(m => m)).merge(actions.clickHeader$.constant(m => m))::startsWith(m => m)
 
   return most.combineArray((messages, selectedMessages, currentMessageFilter, numUsers, currentInputtingScore) => (
     {messages: currentMessageFilter(messages), selectedMessages, numUsers, currentInputtingScore}
@@ -144,6 +145,7 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, cha
       key: message.messageId,
       style: {
         backgroundColor: messageColorScale(normalizeScore(message.score)).css(),
+        opacity: '0', transition: 'opacity 0.6s', delayed: {opacity: '1'},
       },
       attrs: {
         'data-id': message.messageId,
@@ -208,9 +210,9 @@ function Chat(sources, channelId) {
   const VTree$ = state$.map(state => view(state, channelId))
 
 
-  const worker$ = state$.sampleWith(most.periodic(10000)::startsWith(null).delay(2000))
+  const worker$ = state$.sampleWith(most.periodic(10000).delay(2000))
     .map(({messages}) => messages.map(m => [m.contents, m.score]))
-    .map(value => ({eventName: 'segment', value}))
+    .map(value => ({eventName: 'segment', value})).tap(o => console.log(o))
 
 
   return {
