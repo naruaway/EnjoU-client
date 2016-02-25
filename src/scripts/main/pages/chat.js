@@ -202,6 +202,7 @@ function webSocket(actions, state$, channelId) {
 }
 
 function Chat(sources, channelId) {
+
   const actions = intent(sources)
   const state$ = model(actions)::pm.hold()
   const VTree$ = state$.map(state => view(state, channelId))
@@ -210,6 +211,7 @@ function Chat(sources, channelId) {
   const worker$ = state$.sampleWith(most.periodic(10000)::startsWith(null).delay(2000))
     .map(({messages}) => messages.map(m => [m.contents, m.score]))
     .map(value => ({eventName: 'segment', value}))
+
 
   return {
     DOM: VTree$,
