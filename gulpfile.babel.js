@@ -4,6 +4,7 @@ import babelify from 'babelify'
 import source from 'vinyl-source-stream'
 import Koa from 'koa'
 import fs from 'fs'
+import replace from 'gulp-replace'
 
 gulp.task('js', function() {
   browserify('src/main.js', { debug: true })
@@ -11,6 +12,10 @@ gulp.task('js', function() {
     .bundle()
     .on('error', function (err) { console.log('Error : ' + err.message) })
     .pipe(source('script.js'))
+    .pipe(replace(/<\[<\[\*([A-Z_]+)\*\]>\]>/g, (m, envName) => {
+      if (!(envName in process.env)) throw new Error(`envName env var must be set`)
+      return process.env[envName]
+    }))
     .pipe(gulp.dest('dest'))
 })
 

@@ -1,9 +1,11 @@
 # EnjoU client
 ## how to build
+```WS_HOST``` env var is web socket endpoint (e.g. localhost:8080)
 ```bash
 npm install
 npm install -g gulp
 gulp build
+
 ```
 
 ## how to launch mock server
