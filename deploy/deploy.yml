@@ -1,0 +1,54 @@
+- hosts: all
+  user: ec2-user
+  sudo: yes
+  vars:
+    nginx_src: 'etc/nginx.conf'
+    nginx_dest: '/etc/nginx/nginx.conf'
+    node_url: "https://nodejs.org/dist/v5.7.0/node-v5.7.0-linux-x64.tar.gz"
+    node_package: "node-v5.7.0-linux-x64"
+    ec2_dir: '/home/ec2-user'
+    local_dest_dir: '../dest'
+    target_dest_dir: '/var/www'
+    master_url: "https://github.com/naruaway/EnjoU-client/archive/master.zip"
+    branch: 'release'
+    npm_path: '/usr/local/bin/npm'
+    master_name: "EnjoU-client-master"
+    app_dir: "{{target_dest_dir}}/{{master_name}}"
+  tasks:
+    - name: mkdir dest dir
+      file:
+        dest="{{target_dest_dir}}"
+        state=directory
+      sudo: false
+
+    - name: put nginx.conf to /etc/nginx/nginx.conf
+      copy:
+        src="{{nginx_src}}"
+        dest="{{nginx_dest}}"
+    - name: restart nginx
+      command: /etc/init.d/nginx restart
+
+    - name: wget master
+      get_url:
+        url="{{master_url}}"
+        dest="{{target_dest_dir}}"
+    - name: unzip master
+      shell: "unzip {{master_name}}.zip"
+      args:
+        chdir: "{{target_dest_dir}}"
+        creates: "{{target_dest_dir}}/{{master_name}}"
+
+    - name: Install packages based on package.json.
+      shell: 'PATH="$PATH:/usr/local/bin" npm install'
+      args:
+        chdir: "{{app_dir}}"
+    - name: gulp build
+      shell: 'PATH="$PATH:/usr/local/bin" WS_HOST={{WS_HOST}} gulp build'
+      args:
+        chdir: "{{app_dir}}"
+    - name: all files should be owned by nginx
+      file:
+        path: "{{app_dir}}"
+        recurse: yes
+        owner: nginx
+        group: nginx
