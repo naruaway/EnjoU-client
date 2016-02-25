@@ -7,9 +7,9 @@ gulp build
 ```
 
 ## how to launch mock server
-```gulp```
+`gulp`
 
-# WebSocket interface
+## WebSocket interface
 * end point: /api/channel/:channelId
 
 ## events example
@@ -25,6 +25,7 @@ gulp build
 ```
 
 ### server to client
+
 ```
 { eventName: 'initial messages',
   value: {
