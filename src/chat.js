@@ -148,7 +148,7 @@ function Chat({WS, DOM, ROUTER, id}) {
         replyTo: [],
       }
     }})),
-    most.of({type: 'connect', value: `ws://localhost:8080/api/channel/${channelId}`})
+    most.of({type: 'connect', value: `ws://<[<[*WS_HOST*]>]>/api/channel/${channelId}`})
   )
 
   return {

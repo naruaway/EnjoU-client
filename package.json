@@ -52,6 +52,7 @@
     "gulp": "3.9.1",
     "gulp-babel": "6.1.2",
     "gulp-postcss": "^6.1.0",
+    "gulp-replace": "^0.5.4",
     "gulp-sourcemaps": "^1.6.0",
     "history": "2.0.0",
     "koa": "^2.0.0-alpha.3",
