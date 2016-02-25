@@ -71,9 +71,8 @@ const selectedMessages$ = actions.changeText$
 
   const currentInputtingScore$ = most.combineArray((text, wordScores) => {
       const words = segment(text)
-      console.log(words)
       return Math.round(words.map(word => `*${word}` in wordScores ? wordScores[`*${word}`] : 0).reduce((a, c) => a + c, 0) / words.length)
-    }, [actions.changeText$, actions.wordScores$]).debounce(500)::startsWith(0).map(n => Number.isNaN(n) ? 0 : n)
+    }, [actions.changeText$.merge(actions.postText$.constant('')), actions.wordScores$])::startsWith(0).map(n => Number.isNaN(n) ? 0 : n)
 
 
   const newMessageMod$ = actions.newMessage$.map(message => messages => [message, ...messages])
@@ -87,7 +86,6 @@ const selectedMessages$ = actions.changeText$
   })
   const messages$ = most.mergeArray([actions.initialMessages$, newMessageMod$, messageScoreMod$]).scan((a, c) => {
     if (a === null) return c
-    console.log(c)
     return _(c(a)).sortBy(message => -message.messageId).sortedUniqBy(message => -message.messageId).value()
   }, null).skip(1)
 
@@ -131,7 +129,6 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, cha
   function normalizeScore(score) {
     return score / 10
   }
-  console.log(currentInputtingScore)
   const messageColorScale = chroma.scale(['rgba(255, 255, 255, 0.8)', 'rgba(255, 0, 10, 0.5)']).mode('lab')
 
   const selectedMessagesElm = messages.filter(m => selectedMessages.has(m.messageId))
@@ -212,7 +209,7 @@ function Chat(sources, channelId) {
 
   const worker$ = state$.sampleWith(most.periodic(10000).delay(2000))
     .map(({messages}) => messages.map(m => [m.contents, m.score]))
-    .map(value => ({eventName: 'segment', value})).tap(o => console.log(o))
+    .map(value => ({eventName: 'segment', value}))
 
 
   return {
