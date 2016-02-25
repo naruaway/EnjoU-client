@@ -1,3 +1,5 @@
+import most from 'most'
+
 function makeCurrentLocation$(DOM) {
   return DOM.select('a.link').events('click').filter(ev => {
     if (ev.currentTarget.tagName !== 'A') return false
@@ -9,4 +11,9 @@ function makeCurrentLocation$(DOM) {
   .map(ev => ev.currentTarget.getAttribute('href'))
 }
 
-export default { makeCurrentLocation$ }
+function tap(o) {
+  console.log(o)
+  return o
+}
+
+export default { makeCurrentLocation$, tap }

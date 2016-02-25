@@ -1,4 +1,4 @@
-import {segment} from './lib/tiny-segmenter'
+import {segment} from '../lib/tiny-segmenter'
 import _ from 'lodash'
 
 self.onmessage =  (ev) => {

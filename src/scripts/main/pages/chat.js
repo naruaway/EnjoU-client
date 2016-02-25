@@ -1,11 +1,11 @@
 import most from 'most'
+import pm from '../../lib/power-most'
 import {h} from '@motorcycle/dom'
-import utils from './lib/utils'
-import V from './view'
+import utils from '../../lib/utils'
+import V from '../view'
 import _ from 'lodash'
 import chroma from 'chroma-js'
-import hold from '@most/hold'
-import {segment} from './lib/tiny-segmenter'
+import {segment} from '../../lib/tiny-segmenter'
 
 
 function getReplyTos(text) {
@@ -18,7 +18,8 @@ function startsWith(target) {
   return this.merge(most.of(target))
 }
 
-function intent({WS, Worker, DOM, ROUTER, id}) {
+function intent(sources) {
+  const {DOM, WS, Worker} = sources
   return {
     postText$: DOM.select('#post').events('submit').tap(ev => ev.preventDefault())
       .map(ev => {
@@ -28,7 +29,7 @@ function intent({WS, Worker, DOM, ROUTER, id}) {
         return value.trim()
       }).filter(v => v).multicast(),
 
-    changeText$: hold(DOM.select('#post-text').events('input').map(ev => ev.currentTarget.value)
+    changeText$: DOM.select('#post-text').events('input').map(ev => ev.currentTarget.value)
       .merge(
         DOM.select('span.message-id').events('click')
           .map(ev => parseInt(ev.currentTarget.parentNode.dataset.id))
@@ -37,7 +38,7 @@ function intent({WS, Worker, DOM, ROUTER, id}) {
             document.querySelector('#post-text').focus()
             return value
           })
-      )),
+      )::pm.hold(),
 
     clickMessage$: DOM.select('span.message-contents').events('click')
       .map(ev => parseInt(ev.currentTarget.parentNode.dataset.id)),
@@ -108,7 +109,7 @@ function model(actions) {
   ), [messages$, selectedMessages$, currentMessageFilter$, actions.numUsers$::startsWith(null), currentInputtingScore$])
 }
 
-function view({messages, selectedMessages, numUsers, currentInputtingScore}, id) {
+function view({messages, selectedMessages, numUsers, currentInputtingScore}, channelId) {
   function normalizeScore(score) {
     return score / 10
   }
@@ -135,7 +136,7 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, id)
   }
 
   return h('div', [
-           V.header(id, `${numUsers} people in this channel`),
+           V.header(channelId, `${numUsers} people in this channel`),
            h('form#post', {props: {action: ''}}, [
              h('input#post-text', {
                props: {type: 'text', placeholder: 'type here', autocomplete: 'off'},
@@ -151,11 +152,10 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, id)
          ])
 }
 
-function Chat({WS, DOM, Worker, ROUTER, id}) {
-  const channelId = id
-  const actions = intent({WS, Worker, DOM, ROUTER, id})
-  const state$ = hold(model(actions))
-  const VTree$ = state$.map(state => view(state, id))
+function Chat(sources, channelId) {
+  const actions = intent(sources)
+  const state$ = model(actions)::pm.hold()
+  const VTree$ = state$.map(state => view(state, channelId))
 
   const webSocket$ = most.combineArray((contents, currentScore) => ({
     type: 'send',
@@ -176,7 +176,7 @@ function Chat({WS, DOM, Worker, ROUTER, id}) {
 
   return {
     DOM: VTree$,
-    ROUTER: utils.makeCurrentLocation$(DOM),
+    ROUTER: utils.makeCurrentLocation$(sources.DOM),
     WS: webSocket$,
     Worker: worker$,
   }
