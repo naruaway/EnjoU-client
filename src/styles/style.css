@@ -31,6 +31,9 @@ header {
   min-width: 900px;
 }
 
+.message-flare, .message-good {
+  cursor: pointer;
+}
 
 .messages {
   background: rgba(255, 255, 255, 0.2);

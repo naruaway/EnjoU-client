@@ -51,11 +51,18 @@ function intent(sources) {
     numUsers$: WS.get('channel numUsers updated'),
 
     wordScores$: Worker.get('word scores')::startsWith({}),
-  }
+
+    changeMessageScore$: most.merge(
+    DOM.select('span.message-flare').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: 1})),
+    DOM.select('span.message-good').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: -1}))
+  ),
+
+  messageScore$: WS.get('update message score'),
+}
 }
 
 function model(actions) {
-  const selectedMessages$ = actions.changeText$
+const selectedMessages$ = actions.changeText$
     .merge(actions.postText$.constant(''))
     .map(text => {
       return new Set(getReplyTos(text))
@@ -68,9 +75,19 @@ function model(actions) {
     }, [actions.changeText$, actions.wordScores$]).debounce(500)::startsWith(0).map(n => Number.isNaN(n) ? 0 : n)
 
 
-  const messages$ = most.merge(actions.initialMessages$, actions.newMessage$).scan((a, c) => {
+  const newMessageMod$ = actions.newMessage$.map(message => messages => [message, ...messages])
+  const messageScoreMod$ = actions.messageScore$.map(({messageId, score}) => messages => {
+    const msg = _.find(messages, m => m.messageId === messageId)
+    if (msg) {
+      msg.score = score
+      return messages
+    }
+    return messages
+  })
+  const messages$ = most.mergeArray([actions.initialMessages$, newMessageMod$, messageScoreMod$]).scan((a, c) => {
     if (a === null) return c
-    return _([c, ...a]).sortBy(message => -message.messageId).sortedUniqBy(message => -message.messageId).value()
+    console.log(c)
+    return _(c(a)).sortBy(message => -message.messageId).sortedUniqBy(message => -message.messageId).value()
   }, null).skip(1)
 
   const currentMessageFilter$ = actions.clickMessage$
@@ -132,7 +149,12 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, cha
         'data-id': message.messageId,
       },
     }
-    , [h('span.message-id', `${message.messageId}`), h('span.message-contents', message.contents)])
+    , [
+        h('span.message-id', `${message.messageId}`),
+        h('span.message-flare', '🔥'),
+        h('span.message-good', '😀'),
+        h('span.message-contents', message.contents),
+      ])
   }
 
   return h('div', [
@@ -152,12 +174,8 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, cha
          ])
 }
 
-function Chat(sources, channelId) {
-  const actions = intent(sources)
-  const state$ = model(actions)::pm.hold()
-  const VTree$ = state$.map(state => view(state, channelId))
-
-  const webSocket$ = most.combineArray((contents, currentScore) => ({
+function webSocket(actions, state$, channelId) {
+  const postMessage$ = most.combineArray((contents, currentScore) => ({
     type: 'send',
     value: {
       eventName: 'post message',
@@ -168,7 +186,26 @@ function Chat(sources, channelId) {
       }
     }
   }), [actions.postText$, state$.map(({currentInputtingScore}) => currentInputtingScore)]).sampleWith(actions.postText$)
-  ::startsWith({type: 'connect', value: `ws://<[<[*WS_HOST*]>]>/api/channel/${channelId}`})
+
+  const updateScore$ = actions.changeMessageScore$.map(({delta, messageId}) => ({
+    type: 'send',
+    value: {
+      eventName: 'update message score',
+      value: {
+        messageId,
+        delta,
+      }
+    }
+  }))
+  return most.merge(postMessage$, updateScore$)
+    ::startsWith({type: 'connect', value: `ws://<[<[*WS_HOST*]>]>/api/channel/${channelId}`})
+}
+
+function Chat(sources, channelId) {
+  const actions = intent(sources)
+  const state$ = model(actions)::pm.hold()
+  const VTree$ = state$.map(state => view(state, channelId))
+
 
   const worker$ = state$.sampleWith(most.periodic(10000)::startsWith(null).delay(2000))
     .map(({messages}) => messages.map(m => [m.contents, m.score]))
@@ -177,7 +214,7 @@ function Chat(sources, channelId) {
   return {
     DOM: VTree$,
     ROUTER: utils.makeCurrentLocation$(sources.DOM),
-    WS: webSocket$,
+    WS: webSocket(actions, state$, channelId),
     Worker: worker$,
   }
 }
