@@ -48,6 +48,7 @@
     "babel-plugin-transform-object-rest-spread": "6.5.0",
     "babelify": "7.2.0",
     "browserify": "13.0.0",
+    "chroma-js": "^1.1.1",
     "gulp": "3.9.1",
     "gulp-babel": "6.1.2",
     "gulp-postcss": "^6.1.0",
