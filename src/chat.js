@@ -3,8 +3,9 @@ import {h} from '@motorcycle/dom'
 import utils from './lib/utils'
 import V from './view'
 import _ from 'lodash'
-import {segment} from './lib/tiny-segmenter'
 import chroma from 'chroma-js'
+import hold from '@most/hold'
+import {segment} from './lib/tiny-segmenter'
 
 
 function getReplyTos(text) {
@@ -17,7 +18,7 @@ function startsWith(target) {
   return this.merge(most.of(target))
 }
 
-function intent({WS, DOM, ROUTER, id}) {
+function intent({WS, Worker, DOM, ROUTER, id}) {
   return {
     postText$: DOM.select('#post').events('submit').tap(ev => ev.preventDefault())
       .map(ev => {
@@ -27,7 +28,7 @@ function intent({WS, DOM, ROUTER, id}) {
         return value.trim()
       }).filter(v => v).multicast(),
 
-    changeText$: DOM.select('#post-text').events('input').map(ev => ev.currentTarget.value)
+    changeText$: hold(DOM.select('#post-text').events('input').map(ev => ev.currentTarget.value)
       .merge(
         DOM.select('span.message-id').events('click')
           .map(ev => parseInt(ev.currentTarget.parentNode.dataset.id))
@@ -36,7 +37,7 @@ function intent({WS, DOM, ROUTER, id}) {
             document.querySelector('#post-text').focus()
             return value
           })
-      ),
+      )),
 
     clickMessage$: DOM.select('span.message-contents').events('click')
       .map(ev => parseInt(ev.currentTarget.parentNode.dataset.id)),
@@ -47,6 +48,8 @@ function intent({WS, DOM, ROUTER, id}) {
     newMessage$: WS.get('new message'),
 
     numUsers$: WS.get('channel numUsers updated'),
+
+    wordScores$: Worker.get('word scores')::startsWith({}),
   }
 }
 
@@ -56,6 +59,13 @@ function model(actions) {
     .map(text => {
       return new Set(getReplyTos(text))
     }).debounce(500)::startsWith(new Set())
+
+  const currentInputtingScore$ = most.combineArray((text, wordScores) => {
+      const words = segment(text)
+      console.log(words)
+      return Math.round(words.map(word => `*${word}` in wordScores ? wordScores[`*${word}`] : 0).reduce((a, c) => a + c, 0) / words.length)
+    }, [actions.changeText$, actions.wordScores$]).debounce(500)::startsWith(0).map(n => Number.isNaN(n) ? 0 : n)
+
 
   const messages$ = most.merge(actions.initialMessages$, actions.newMessage$).scan((a, c) => {
     if (a === null) return c
@@ -93,13 +103,17 @@ function model(actions) {
       return result
     })::startsWith(m => m)
 
-  return most.combineArray((messages, selectedMessages, currentMessageFilter, numUsers) => (
-    {messages: currentMessageFilter(messages), selectedMessages, numUsers}
-  ), [messages$, selectedMessages$, currentMessageFilter$, actions.numUsers$::startsWith(null)])
+  return most.combineArray((messages, selectedMessages, currentMessageFilter, numUsers, currentInputtingScore) => (
+    {messages: currentMessageFilter(messages), selectedMessages, numUsers, currentInputtingScore}
+  ), [messages$, selectedMessages$, currentMessageFilter$, actions.numUsers$::startsWith(null), currentInputtingScore$])
 }
 
-function view({messages, selectedMessages, numUsers}, id) {
-  const messageColorScale = chroma.scale(['rgba(255, 0, 10, 0.5)', 'rgba(255, 255, 255, 0.8)']).mode('lab')
+function view({messages, selectedMessages, numUsers, currentInputtingScore}, id) {
+  function normalizeScore(score) {
+    return score / 10
+  }
+  console.log(currentInputtingScore)
+  const messageColorScale = chroma.scale(['rgba(255, 255, 255, 0.8)', 'rgba(255, 0, 10, 0.5)']).mode('lab')
 
   const selectedMessagesElm = messages.filter(m => selectedMessages.has(m.messageId))
     .map(createMessageElm)
@@ -111,7 +125,7 @@ function view({messages, selectedMessages, numUsers}, id) {
     return h('li.message', {
       key: message.messageId,
       style: {
-        background: messageColorScale(Math.random()).css(),
+        backgroundColor: messageColorScale(normalizeScore(message.score)).css(),
       },
       attrs: {
         'data-id': message.messageId,
@@ -123,7 +137,11 @@ function view({messages, selectedMessages, numUsers}, id) {
   return h('div', [
            V.header(id, `${numUsers} people in this channel`),
            h('form#post', {props: {action: ''}}, [
-             h('input#post-text', {props: {type: 'text', placeholder: 'type here', autocomplete: 'off'}}),
+             h('input#post-text', {
+               props: {type: 'text', placeholder: 'type here', autocomplete: 'off'},
+               style: {backgroundColor: messageColorScale(normalizeScore(currentInputtingScore))},
+
+             }),
            ]),
            h('div.main', [
              h('div.messages', (selectedMessagesElm.length === 0 ? [
@@ -133,28 +151,34 @@ function view({messages, selectedMessages, numUsers}, id) {
          ])
 }
 
-function Chat({WS, DOM, ROUTER, id}) {
+function Chat({WS, DOM, Worker, ROUTER, id}) {
   const channelId = id
-  const actions = intent({WS, DOM, ROUTER, id})
-  const state$ = model(actions)
+  const actions = intent({WS, Worker, DOM, ROUTER, id})
+  const state$ = hold(model(actions))
   const VTree$ = state$.map(state => view(state, id))
 
-  const webSocket$ = most.merge(
-    actions.postText$.map(contents => ({type: 'send', value: {
+  const webSocket$ = most.combineArray((contents, currentScore) => ({
+    type: 'send',
+    value: {
       eventName: 'post message',
       value: {
         contents,
-        score: 0,
+        score: currentScore,
         replyTo: [],
       }
-    }})),
-    most.of({type: 'connect', value: `ws://<[<[*WS_HOST*]>]>/api/channel/${channelId}`})
-  )
+    }
+  }), [actions.postText$, state$.map(({currentInputtingScore}) => currentInputtingScore)]).sampleWith(actions.postText$)
+  ::startsWith({type: 'connect', value: `ws://<[<[*WS_HOST*]>]>/api/channel/${channelId}`})
+
+  const worker$ = state$.sampleWith(most.periodic(10000)::startsWith(null).delay(2000))
+    .map(({messages}) => messages.map(m => [m.contents, m.score]))
+    .map(value => ({eventName: 'segment', value}))
 
   return {
     DOM: VTree$,
     ROUTER: utils.makeCurrentLocation$(DOM),
     WS: webSocket$,
+    Worker: worker$,
   }
 }
 

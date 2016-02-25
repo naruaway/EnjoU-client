@@ -175,8 +175,8 @@ TinySegmenter.prototype.segment = function(input) {
   return result;
 }
 
+const segmenter = new TinySegmenter()
 function segment(text) {
-  const segmenter = new TinySegmenter()
   return segmenter.segment(text)
 }
 
