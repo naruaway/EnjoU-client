@@ -3,8 +3,8 @@ import {h} from '@motorcycle/dom'
 import utils from './lib/utils'
 import V from './view'
 import _ from 'lodash'
-import {segment} from './lib/tiny-segmenter'
 import chroma from 'chroma-js'
+import hold from '@most/hold'
 
 
 function getReplyTos(text) {
@@ -18,7 +18,7 @@ function startsWith(target) {
 }
 
 function intent({WS, Worker, DOM, ROUTER, id}) {
-  Worker.get('tako').observe(o => console.log(o))
+  Worker.get('word scores').observe(o => console.log(o))
 
   return {
     postText$: DOM.select('#post').events('submit').tap(ev => ev.preventDefault())
@@ -138,7 +138,7 @@ function view({messages, selectedMessages, numUsers}, id) {
 function Chat({WS, DOM, Worker, ROUTER, id}) {
   const channelId = id
   const actions = intent({WS, Worker, DOM, ROUTER, id})
-  const state$ = model(actions)
+  const state$ = hold(model(actions))
   const VTree$ = state$.map(state => view(state, id))
 
   const webSocket$ = most.merge(
@@ -153,7 +153,16 @@ function Chat({WS, DOM, Worker, ROUTER, id}) {
     most.of({type: 'connect', value: `ws://<[<[*WS_HOST*]>]>/api/channel/${channelId}`})
   )
 
-  const worker$ = most.of({eventName: 'segment', value: ['なんでやねん', 'まじで言ってる?']})
+  most.periodic(1000).observe(o => console.log(o))
+  state$.sampleWith(most.periodic(1000).tap(o => console.log(o))).observe(o => {
+    console.log('OBJECT')
+    console.log(o)
+  })
+  const worker$ = state$.sampleWith(most.periodic(1000).tap(o => {
+    console.log(Math.random())
+    console.log(o)
+  })).map(({messages}) => messages.map(m => [m.contents, m.score]))
+    .map(value => ({eventName: 'segment', value}))
 
   return {
     DOM: VTree$,

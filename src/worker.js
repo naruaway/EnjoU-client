@@ -1,11 +1,20 @@
 import {segment} from './lib/tiny-segmenter'
 
-self.addEventListener('message', function(e) {
-  const {eventName, value} = JSON.parse(e.data)
+self.onmessage =  (ev) => {
+  const {eventName, value} = JSON.parse(ev.data)
   if (eventName === 'segment') {
-    self.postMessage({
-      eventName: 'tako',
-      value: value.map(segment),
+    const messages = value
+    const wordScores = {}
+    messages.forEach(message => {
+      const words = segment(message[0])
+      const score = message[1]
+      words.forEach(word => {
+        wordScores[`*${word}`] = (`*${word}` in wordScores ? wordScores[`*${word}`] : 0) + score
+      })
     })
+    self.postMessage(JSON.stringify({
+      eventName: 'word scores',
+      value: wordScores,
+    }))
   }
-}, false)
+}

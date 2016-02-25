@@ -7,7 +7,7 @@ function makeWorkerDriver(workerFilename) {
   const callbacks = new Map()
 
   function onmessage(event) {
-    const message = event.data
+    const message = JSON.parse(event.data)
     callbacks.forEach((eventName, fn) => {
       if (message.eventName !== eventName) return
       fn(message.value)
