@@ -40,7 +40,13 @@ run(({WS, DOM, ROUTER, initialRoute$}) => {
   }
 }, {
   initialRoute$: () => most.of(location.pathname),
-  DOM: makeDOMDriver('#app'),
+  DOM: makeDOMDriver('#app', [
+    require(`snabbdom/modules/class`),
+    require(`snabbdom/modules/props`),
+    require(`snabbdom/modules/attributes`),
+    require(`snabbdom/modules/style`),
+    require('snabbdom/modules/eventlisteners'),
+  ]),
   ROUTER: makeRouterDriver(createHistory()),
   WS: makeSocketDriver(),
 })

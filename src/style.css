@@ -24,22 +24,39 @@ header {
   padding: 0.5em;
   color: rgba(50, 0, 0, 0.8);
   background: rgba(255, 0, 0, 0.8);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.2);
 }
 
 .main {
-  display: flex;
   min-width: 900px;
 }
 
-.main > * {
-  width: 100%;
-  padding: 1em;
-  flex-direction: row;
-}
 
 .messages {
   background: rgba(255, 255, 255, 0.2);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.selected-messages {
+  margin-bottom: 3em;
+}
+
+.message {
+  padding: 0.5em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.message-id {
+  font-size: 0.8em;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 0.2em 0.3em;
+  background: rgba(255, 255, 255, 0.4);
+  margin-right: 0.2em;
+  cursor: pointer;
+}
+.message-id:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.9);
 }
 
 ul {
