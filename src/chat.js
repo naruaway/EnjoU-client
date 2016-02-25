@@ -109,8 +109,11 @@ function model(actions) {
 }
 
 function view({messages, selectedMessages, numUsers, currentInputtingScore}, id) {
+  function normalizeScore(score) {
+    return score / 10
+  }
   console.log(currentInputtingScore)
-  const messageColorScale = chroma.scale(['rgba(255, 0, 10, 0.5)', 'rgba(255, 255, 255, 0.8)']).mode('lab')
+  const messageColorScale = chroma.scale(['rgba(255, 255, 255, 0.8)', 'rgba(255, 0, 10, 0.5)']).mode('lab')
 
   const selectedMessagesElm = messages.filter(m => selectedMessages.has(m.messageId))
     .map(createMessageElm)
@@ -122,7 +125,7 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, id)
     return h('li.message', {
       key: message.messageId,
       style: {
-        background: messageColorScale(1.0 - ((message.score + 10) / 20)).css(),
+        backgroundColor: messageColorScale(normalizeScore(message.score)).css(),
       },
       attrs: {
         'data-id': message.messageId,
@@ -134,7 +137,11 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, id)
   return h('div', [
            V.header(id, `${numUsers} people in this channel`),
            h('form#post', {props: {action: ''}}, [
-             h('input#post-text', {props: {type: 'text', placeholder: 'type here', autocomplete: 'off'}}),
+             h('input#post-text', {
+               props: {type: 'text', placeholder: 'type here', autocomplete: 'off'},
+               style: {backgroundColor: messageColorScale(normalizeScore(currentInputtingScore))},
+
+             }),
            ]),
            h('div.main', [
              h('div.messages', (selectedMessagesElm.length === 0 ? [
