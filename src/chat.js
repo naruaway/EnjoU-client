@@ -7,7 +7,6 @@ import {segment} from './lib/tiny-segmenter'
 import chroma from 'chroma-js'
 
 
-
 function getReplyTos(text) {
   let m = text.match(/@([1-9][0-9]+|[1-9])/g)
   m = m ? m : []
@@ -46,6 +45,8 @@ function intent({WS, DOM, ROUTER, id}) {
     initialMessages$: WS.get('initial messages'),
 
     newMessage$: WS.get('new message'),
+
+    numUsers$: WS.get('channel numUsers updated'),
   }
 }
 
@@ -92,12 +93,12 @@ function model(actions) {
       return result
     })::startsWith(m => m)
 
-  return most.combineArray((messages, selectedMessages, currentMessageFilter) => (
-    {messages: currentMessageFilter(messages), selectedMessages}
-  ), [messages$, selectedMessages$, currentMessageFilter$])
+  return most.combineArray((messages, selectedMessages, currentMessageFilter, numUsers) => (
+    {messages: currentMessageFilter(messages), selectedMessages, numUsers}
+  ), [messages$, selectedMessages$, currentMessageFilter$, actions.numUsers$::startsWith(null)])
 }
 
-function view({messages, selectedMessages}, id) {
+function view({messages, selectedMessages, numUsers}, id) {
   const messageColorScale = chroma.scale(['rgba(255, 0, 10, 0.5)', 'rgba(255, 255, 255, 0.8)']).mode('lab')
 
   const selectedMessagesElm = messages.filter(m => selectedMessages.has(m.messageId))
@@ -120,7 +121,7 @@ function view({messages, selectedMessages}, id) {
   }
 
   return h('div', [
-           V.header(id),
+           V.header(id, `${numUsers} people in this channel`),
            h('form#post', {props: {action: ''}}, [
              h('input#post-text', {props: {type: 'text', placeholder: 'type here', autocomplete: 'off'}}),
            ]),
