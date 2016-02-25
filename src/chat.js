@@ -13,12 +13,6 @@ function startsWith(target) {
 
 function intent({WS, DOM, ROUTER, id}) {
   return {
-    /*
-    clickMessage$: DOM.select('.message').events('click')
-      .map(ev => parseInt(ev.currentTarget.dataset.id))
-      .tap(messageId => { document.querySelector('#post-text').value += ` @${messageId} ` }),
-      */
-
     postText$: DOM.select('#post').events('submit').tap(ev => ev.preventDefault())
       .map(ev => {
         const elm = ev.currentTarget.querySelector('#post-text')
@@ -27,7 +21,16 @@ function intent({WS, DOM, ROUTER, id}) {
         return value.trim()
       }).filter(v => v).multicast(),
 
-    changeText$: DOM.select('#post-text').events('input').map(ev => ev.currentTarget.value),
+    changeText$: DOM.select('#post-text').events('input').map(ev => ev.currentTarget.value)
+      .merge(
+        DOM.select('span.message-id').events('click')
+          .map(ev => parseInt(ev.currentTarget.parentNode.dataset.id))
+          .map(messageId => {
+            const value = document.querySelector('#post-text').value += ` @${messageId} `
+            document.querySelector('#post-text').focus()
+            return value
+          })
+      ),
 
     initialMessages$: WS.get('initial messages'),
 
