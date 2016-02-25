@@ -1,5 +1,5 @@
 import most from 'most'
-
+import hold from '@most/hold'
 import {run} from '@motorcycle/core'
 import {makeDOMDriver, h} from '@motorcycle/dom'
 import {makeRouterDriver} from '@motorcycle/router'
@@ -16,7 +16,7 @@ function root({DOM, ROUTER}) {
     DOM: most.periodic(1000).constant(1).scan((a, c) => a + c, 0).map(i =>
       h('div', [
         V.header(),
-        h('a', {props: {href: `/123${i}`}}, [`/123${i}`]),
+        h('a.link', {props: {href: `/123${i}`}}, [`/123${i}`]),
       ])
     ),
     ROUTER: utils.makeCurrentLocation$(DOM),
@@ -24,19 +24,18 @@ function root({DOM, ROUTER}) {
 }
 
 run(({WS, DOM, ROUTER, initialRoute$}) => {
-  const currentComponent$ = ROUTER.define({
+  const currentComponent$ = hold(ROUTER.define({
     '/': () => isolate(root)({DOM, ROUTER: ROUTER.path('/')}),
-    '/:id': (id) => () => isolate(Chat)({WS, DOM, ROUTER: ROUTER.path('/'), id}),
-  }).value$.map(f => f()).multicast()
+    '/:channelId': (channelId) => () => isolate(Chat)({WS, DOM, ROUTER: ROUTER.path('/'), id: channelId}),
+  }).value$.map(f => f()))
 
   const currentVTree$ = currentComponent$.map(({DOM}) => DOM).switch()
   const currentLocation$ = currentComponent$.map(({ROUTER}) => ROUTER).switch()
   const currentWS = currentComponent$.map(({WS}) => WS ? WS : most.empty()).switch()
 
   return {
-    //DOM: most.of(h('div', [h('a', {props: {href: "/some/route"}}, ['/tako/A'])])),
     DOM: currentVTree$,
-    ROUTER: currentLocation$.merge(initialRoute$),
+    ROUTER: currentLocation$,
     WS: currentWS,
   }
 }, {

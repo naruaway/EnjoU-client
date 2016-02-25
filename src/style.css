@@ -1,6 +1,16 @@
 * {
   margin: 0;
   padding: 0;
+  appearance: none;
+  outline: 0;
+  border: 0;
+}
+input:focus, textarea:focus {
+  outline:0;
+}
+
+input, textarea {
+  box-sizing:content-box;
 }
 
 html {
@@ -29,7 +39,7 @@ header {
 }
 
 .messages {
-  background: rgba(255, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 ul {
@@ -37,6 +47,13 @@ ul {
 }
 
 #post input {
+  padding: 0.3em;
   font-size: 1.5em;
   width: 100%;
+  color: rgba(255, 0, 0, 0.8);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+#post input::placeholder {
+  color: rgba(0, 0, 0, 0.1);
 }
