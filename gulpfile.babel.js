@@ -68,3 +68,4 @@ gulp.task('webserver', () => {
 })
 
 gulp.task('default', ['js', 'css', 'html', 'png', 'watch', 'webserver'])
+gulp.task('build', ['js', 'css', 'html', 'png'])

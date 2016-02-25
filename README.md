@@ -3,5 +3,8 @@
 ```bash
 npm install
 npm install -g gulp
-gulp
+gulp build
 ```
+
+## how to launch mock server
+```gulp```
