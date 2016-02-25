@@ -1,0 +1,45 @@
+- hosts: all
+  user: ec2-user
+  sudo: yes
+  vars:
+    nginx_src: 'etc/nginx.conf'
+    nginx_dest: '/etc/nginx/nginx.conf'
+    nginx_log_dir: '/var/log/nginx'
+    node_url: "https://nodejs.org/dist/v5.7.0/node-v5.7.0-linux-x64.tar.gz"
+    node_package: "node-v5.7.0-linux-x64"
+    ec2_dir: '/home/ec2-user'
+    local_dest_dir: '../dest'
+    target_dest_dir: '/var/www'
+    repo_url: 'git@github.com:naruaway/EnjoU-client.git'
+    branch: 'master'
+    npm_path: '/usr/local/bin/npm'
+  tasks:
+    - name: Install nginx
+      yum: name=nginx state=present
+    - name: mkdir nginx log dir
+      file:
+        dest="{{nginx_log_dir}}" state=directory
+        group=nginx owner=nginx
+    - name: put nginx.conf to /etc/nginx/nginx.conf
+      copy:
+        src="{{nginx_src}}"
+        dest="{{nginx_dest}}"
+    - name: restart nginx
+      command: /etc/init.d/nginx restart
+
+    - name: install git
+      yum: name=git state=latest
+    - name: wget node
+      get_url:
+        url="{{node_url}}"
+        dest="{{ec2_dir}}/{{node_package}}.tar.gz"
+    - name: put node & npm to /usr/local/bin
+      command:
+        tar --strip-components 1 -zxvf "{{node_package}}.tar.gz" -C /usr/local
+      args:
+        chdir: "{{ec2_dir}}"
+        creates: /usr/local/bin/node
+
+    - name: Install gulp to global
+      shell: 'PATH=$PATH:/usr/local/bin npm install -g gulp'
+      sudo: false
