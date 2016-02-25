@@ -25,12 +25,30 @@ header {
   color: rgba(50, 0, 0, 0.8);
   background: rgba(255, 0, 0, 0.8);
   border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+  display: flex;
+  position: relative;
+}
+
+header img {
+  display: block;
+}
+header div {
+  color: rgba(255, 255, 255, 0.8);
+  text-align: right;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 0.3em;
+  display: block;
 }
 
 .main {
   min-width: 900px;
 }
 
+.message-flare, .message-good {
+  cursor: pointer;
+}
 
 .messages {
   background: rgba(255, 255, 255, 0.2);

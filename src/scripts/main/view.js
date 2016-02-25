@@ -1,9 +1,9 @@
 import {h} from '@motorcycle/dom'
 
 function header(id, text='') {
-  return h('header',
+  return h('header.header',
     id
-      ? [h('img', {props: {src: '/images/enjou.png', height: 50}}), `(id: ${id}) ${text}`]
+      ? [h('img', {props: {src: '/images/enjou.png', height: 50}}), h('div', `(id: ${id}) ${text}`)]
       : [h('img', {props: {src: '/images/enjou.png', height: 50}})])
 }
 

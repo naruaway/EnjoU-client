@@ -7,14 +7,14 @@ import fs from 'fs'
 import replace from 'gulp-replace'
 
 gulp.task('js', function() {
-  browserify('src/worker.js', { debug: true })
+  browserify('src/scripts/workers/worker.js', { debug: true })
     .transform(babelify)
     .bundle()
     .on('error', function (err) { console.log('Error : ' + err.message) })
     .pipe(source('worker.js'))
     .pipe(gulp.dest('dest'))
 
-  browserify('src/main.js', { debug: true })
+  browserify('src/scripts/main/main.js', { debug: true })
     .transform(babelify)
     .bundle()
     .on('error', function (err) { console.log('Error : ' + err.message) })
@@ -29,7 +29,7 @@ gulp.task('js', function() {
 gulp.task('css', function() {
   const postcss    = require('gulp-postcss')
   const sourcemaps = require('gulp-sourcemaps')
-  return gulp.src('src/**/*.css')
+  return gulp.src('src/styles/**/*.css')
     .pipe( sourcemaps.init() )
     .pipe( postcss([ require('autoprefixer'), require('precss') ]) )
     .pipe( sourcemaps.write('.') )
@@ -47,8 +47,8 @@ gulp.task('html', function() {
 })
 
 gulp.task('watch', function() {
-  gulp.watch('src/*.js', ['js'])
-  gulp.watch('src/*.css', ['css'])
+  gulp.watch('src/**/*.js', ['js'])
+  gulp.watch('src/**/*.css', ['css'])
   gulp.watch('src/*.html', ['html'])
   gulp.watch('src/images/*.png', ['png'])
 })
