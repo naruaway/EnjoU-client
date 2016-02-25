@@ -1,12 +1,16 @@
 # EnjoU client
 ## how to build
-```WS_HOST``` env var is web socket endpoint (e.g. localhost:8080)
+`WS_HOST` env var is web socket endpoint (e.g. localhost:8080)
 ```bash
 npm install
 npm install -g gulp
 gulp build
-
 ```
+
+## how to deploy
+- `WS_HOST=<WEBSOCKET_SERVER_HOST> gulp build`
+- `cd deploy`
+- `ansible-playbook -i hosts deploy.yml`
 
 ## how to launch mock server
 `gulp`
