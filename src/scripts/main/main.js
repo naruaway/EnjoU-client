@@ -32,7 +32,7 @@ run(sources => {
     '/':
       () => isolate(Root)(sources),
 
-    '/:channelId': (channelId) =>
+    '/channels/:channelId': (channelId) =>
       () => isolate(Chat)(sources, channelId),
 
   }).value$.map(f => f())::pm.hold()

@@ -5,11 +5,22 @@ import {h} from '@motorcycle/dom'
 import V from '../view'
 
 function Root({DOM, ROUTER}) {
+  function makeLinkElm(href, children) {
+    return h('a.link', {props: {href: href}}, children)
+  }
+
   return {
-    DOM: most.periodic(1000).constant(1).scan((a, c) => a + c, 0).map(i =>
+    DOM: most.of(
       h('div', [
         V.header(),
-        h('a.link', {props: {href: `/123${i}`}}, [`/123${i}`]),
+        h('ul', [
+          h('li', [makeLinkElm('/channels/1', '1')]),
+          h('li', [makeLinkElm('/channels/2', '2')]),
+          h('li', [makeLinkElm('/channels/3', '3')]),
+          h('li', [makeLinkElm('/channels/4', '4')]),
+          h('li', [makeLinkElm('/channels/5', '5')]),
+          h('li', [makeLinkElm('/channels/6', '6')]),
+        ]),
       ])
     ),
     ROUTER: utils.makeCurrentLocation$(DOM),
