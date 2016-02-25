@@ -1,0 +1,19 @@
+- hosts: all
+  user: ec2-user
+  sudo: yes
+  vars:
+    nginx_src: 'etc/nginx.conf'
+    nginx_dest: '/etc/nginx/nginx.conf'
+    local_dest_dir: '../dest'
+    target_dest_dir: '/var/www'
+  tasks:
+    - name: mkdir dest dir
+      file:
+        dest="{{target_dest_dir}}"
+        state=directory
+        group=nginx owner=nginx
+    - name: put dest dir
+      copy:
+        src="{{local_dest_dir}}"
+        dest="{{target_dest_dir}}"
+        group=nginx owner=nginx
