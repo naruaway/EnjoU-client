@@ -17,7 +17,9 @@ function startsWith(target) {
   return this.merge(most.of(target))
 }
 
-function intent({WS, DOM, ROUTER, id}) {
+function intent({WS, Worker, DOM, ROUTER, id}) {
+  Worker.get('tako').observe(o => console.log(o))
+
   return {
     postText$: DOM.select('#post').events('submit').tap(ev => ev.preventDefault())
       .map(ev => {
@@ -133,9 +135,9 @@ function view({messages, selectedMessages, numUsers}, id) {
          ])
 }
 
-function Chat({WS, DOM, ROUTER, id}) {
+function Chat({WS, DOM, Worker, ROUTER, id}) {
   const channelId = id
-  const actions = intent({WS, DOM, ROUTER, id})
+  const actions = intent({WS, Worker, DOM, ROUTER, id})
   const state$ = model(actions)
   const VTree$ = state$.map(state => view(state, id))
 
@@ -151,10 +153,13 @@ function Chat({WS, DOM, ROUTER, id}) {
     most.of({type: 'connect', value: `ws://<[<[*WS_HOST*]>]>/api/channel/${channelId}`})
   )
 
+  const worker$ = most.of({eventName: 'segment', value: ['なんでやねん', 'まじで言ってる?']})
+
   return {
     DOM: VTree$,
     ROUTER: utils.makeCurrentLocation$(DOM),
     WS: webSocket$,
+    Worker: worker$,
   }
 }
 

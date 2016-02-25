@@ -5,6 +5,7 @@ import {makeDOMDriver, h} from '@motorcycle/dom'
 import {makeRouterDriver} from '@motorcycle/router'
 import {createHistory} from 'history'
 import {makeSocketDriver} from './websocket-driver'
+import {makeWorkerDriver} from './webworker-driver'
 import isolate from '@cycle/isolate'
 import V from './view'
 import _ from 'lodash'
@@ -23,20 +24,22 @@ function root({DOM, ROUTER}) {
   }
 }
 
-run(({WS, DOM, ROUTER, initialRoute$}) => {
+run(({WS, Worker, DOM, ROUTER, initialRoute$}) => {
   const currentComponent$ = hold(ROUTER.define({
     '/': () => isolate(root)({DOM, ROUTER: ROUTER.path('/')}),
-    '/:channelId': (channelId) => () => isolate(Chat)({WS, DOM, ROUTER: ROUTER.path('/'), id: channelId}),
+    '/:channelId': (channelId) => () => isolate(Chat)({WS, Worker, DOM, ROUTER: ROUTER.path('/'), id: channelId}),
   }).value$.map(f => f()))
 
   const currentVTree$ = currentComponent$.map(({DOM}) => DOM).switch()
   const currentLocation$ = currentComponent$.map(({ROUTER}) => ROUTER).switch()
   const currentWS = currentComponent$.map(({WS}) => WS ? WS : most.empty()).switch()
+  const currentWorker = currentComponent$.map(({Worker}) => Worker ? Worker : most.empty()).switch()
 
   return {
     DOM: currentVTree$,
     ROUTER: currentLocation$,
     WS: currentWS,
+    Worker:currentWorker,
   }
 }, {
   initialRoute$: () => most.of(location.pathname),
@@ -49,4 +52,5 @@ run(({WS, DOM, ROUTER, initialRoute$}) => {
   ]),
   ROUTER: makeRouterDriver(createHistory()),
   WS: makeSocketDriver(),
+  Worker: makeWorkerDriver('/worker.js'),
 })

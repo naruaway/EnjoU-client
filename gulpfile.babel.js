@@ -7,6 +7,13 @@ import fs from 'fs'
 import replace from 'gulp-replace'
 
 gulp.task('js', function() {
+  browserify('src/worker.js', { debug: true })
+    .transform(babelify)
+    .bundle()
+    .on('error', function (err) { console.log('Error : ' + err.message) })
+    .pipe(source('worker.js'))
+    .pipe(gulp.dest('dest'))
+
   browserify('src/main.js', { debug: true })
     .transform(babelify)
     .bundle()
