@@ -7,6 +7,13 @@ import {segment} from './lib/tiny-segmenter'
 import chroma from 'chroma-js'
 
 
+
+function getReplyTos(text) {
+  let m = text.match(/@([1-9][0-9]+|[1-9])/g)
+  m = m ? m : []
+  return m.map(i => parseInt(i.slice(1)))
+}
+
 function startsWith(target) {
   return this.merge(most.of(target))
 }
@@ -32,6 +39,10 @@ function intent({WS, DOM, ROUTER, id}) {
           })
       ),
 
+    clickMessage$: DOM.select('span.message-contents').events('click')
+      .map(ev => parseInt(ev.currentTarget.parentNode.dataset.id)),
+
+
     initialMessages$: WS.get('initial messages'),
 
     newMessage$: WS.get('new message'),
@@ -42,8 +53,7 @@ function model(actions) {
   const selectedMessages$ = actions.changeText$
     .merge(actions.postText$.constant(''))
     .map(text => {
-      const m = text.match(/@([1-9][0-9]+|[1-9])/g)
-      return new Set((m ? m : []).map(i => parseInt(i.slice(1))))
+      return new Set(getReplyTos(text))
     }).debounce(500)::startsWith(new Set())
 
   const messages$ = most.merge(actions.initialMessages$, actions.newMessage$).scan((a, c) => {
@@ -51,9 +61,40 @@ function model(actions) {
     return _([c, ...a]).sortBy(message => -message.messageId).sortedUniqBy(message => -message.messageId).value()
   }, null).skip(1)
 
-  return most.combineArray((messages, selectedMessages) => (
-    {messages, selectedMessages}
-  ), [messages$, selectedMessages$])
+  const currentMessageFilter$ = actions.clickMessage$
+    .map(messageId => messages => {
+      const result = []
+      const len = messages.length
+      let i = 0
+      const replyToIds = new Set()
+      for (i = 0; i < len; ++i) {
+        const message = messages[i]
+        if (message.messageId === messageId) {
+          getReplyTos(message.contents).forEach(id => {
+            replyToIds.add(id)
+          })
+          result.push(message)
+          break
+        }
+        if (getReplyTos(message.contents).indexOf(messageId) !== -1) {
+          result.push(message)
+        }
+      }
+      for (let j = i + 1; j < len; ++j) {
+        const message = messages[j]
+        if (replyToIds.has(message.messageId)) {
+          result.push(message)
+          getReplyTos(message.contents).forEach(id => {
+            replyToIds.add(id)
+          })
+        }
+      }
+      return result
+    })::startsWith(m => m)
+
+  return most.combineArray((messages, selectedMessages, currentMessageFilter) => (
+    {messages: currentMessageFilter(messages), selectedMessages}
+  ), [messages$, selectedMessages$, currentMessageFilter$])
 }
 
 function view({messages, selectedMessages}, id) {
