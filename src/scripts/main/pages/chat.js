@@ -54,9 +54,9 @@ function intent(sources) {
     wordScores$: Worker.get('word scores')::startsWith({}),
 
     changeMessageScore$: most.merge(
-    DOM.select('span.message-flare').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: 1})),
-    DOM.select('span.message-good').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: -1}))
-  ),
+    DOM.select('img.message-flare').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: 1})),
+    DOM.select('img.message-good').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: -1}))
+  ).throttle(1000),
 
   messageScore$: WS.get('update message score'),
 }
@@ -150,8 +150,8 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, cha
     }
     , [
         h('span.message-id', `${message.messageId}`),
-        h('span.message-flare', '🔥'),
-        h('span.message-good', '😀'),
+        h('img.message-flare', {props: {src: '/images/angry.png', width: 20}}),
+        h('img.message-good', {props: {src: '/images/smile.png', width: 20}}),
         h('span.message-contents', message.contents),
       ])
   }

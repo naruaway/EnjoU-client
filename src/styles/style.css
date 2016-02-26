@@ -46,7 +46,17 @@ header div {
   min-width: 900px;
 }
 
-.message-flare, .message-good {
+.message-flare {
+  margin-right: 0.2em;
+  margin-left: 0.1em;
+  margin-bottom: -0.2em;
+  cursor: pointer;
+}
+
+.message-good {
+  margin-right: 0.2em;
+  margin-left: 0.1em;
+  margin-bottom: -0.2em;
   cursor: pointer;
 }
 
