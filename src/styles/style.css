@@ -18,6 +18,17 @@ html {
   color: rgba(0, 0, 0, 0.8);
 }
 
+a.link {
+  color: rgba(200, 0, 0, 0.7);
+  padding: 0.1em;
+}
+a.link:hover {
+  color: rgba(200, 0, 0, 0.9);
+}
+.top-list {
+  margin: 2em;
+}
+
 header {
   font-size: 1.5em;
   text-align: center;
@@ -46,7 +57,17 @@ header div {
   min-width: 900px;
 }
 
-.message-flare, .message-good {
+.message-flare {
+  margin-right: 0.2em;
+  margin-left: 0.1em;
+  margin-bottom: -0.2em;
+  cursor: pointer;
+}
+
+.message-good {
+  margin-right: 0.2em;
+  margin-left: 0.1em;
+  margin-bottom: -0.2em;
   cursor: pointer;
 }
 

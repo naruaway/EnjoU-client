@@ -6,6 +6,7 @@ import {run} from '@motorcycle/core'
 import isolate from '@cycle/isolate'
 import {makeDOMDriver, h} from '@motorcycle/dom'
 import {makeRouterDriver} from '@motorcycle/router'
+import {makeHTTPDriver} from '@motorcycle/http'
 import {createHistory} from 'history'
 import {makeSocketDriver} from './drivers/websocket-driver'
 import {makeWorkerDriver} from './drivers/webworker-driver'
@@ -24,6 +25,7 @@ const drivers = {
   ROUTER: makeRouterDriver(createHistory()),
   WS: makeSocketDriver(),
   Worker: makeWorkerDriver('/worker.js'),
+  HTTP: makeHTTPDriver(),
 }
 
 run(sources => {

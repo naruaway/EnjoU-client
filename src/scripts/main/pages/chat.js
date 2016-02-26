@@ -6,6 +6,7 @@ import V from '../view'
 import _ from 'lodash'
 import chroma from 'chroma-js'
 import {segment} from '../../lib/tiny-segmenter'
+import unilist from './list'
 
 
 function getReplyTos(text) {
@@ -54,9 +55,9 @@ function intent(sources) {
     wordScores$: Worker.get('word scores')::startsWith({}),
 
     changeMessageScore$: most.merge(
-    DOM.select('span.message-flare').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: 1})),
-    DOM.select('span.message-good').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: -1}))
-  ),
+    DOM.select('img.message-flare').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: 1})),
+    DOM.select('img.message-good').events('click').tap(ev => ev.preventDefault()).map(ev => ({messageId: parseInt(ev.currentTarget.parentNode.dataset.id), delta: -1}))
+  ).throttle(1000),
 
   messageScore$: WS.get('update message score'),
 }
@@ -72,7 +73,7 @@ const selectedMessages$ = actions.changeText$
   const currentInputtingScore$ = most.combineArray((text, wordScores) => {
       const words = segment(text).map(w => w.trim()).filter(w => w)
       return Math.round(words.map(word => `*${word}` in wordScores ? wordScores[`*${word}`] : 0).reduce((a, c) => a + c, 0) / words.length)
-    }, [actions.changeText$.merge(actions.postText$.constant('')), actions.wordScores$])::startsWith(0).map(n => Number.isNaN(n) ? 0 : n)
+    }, [actions.changeText$.merge(actions.postText$.constant('').delay(1)), actions.wordScores$])::startsWith(0).map(n => Number.isNaN(n) ? 0 : n)
 
 
   const newMessageMod$ = actions.newMessage$.map(message => messages => [message, ...messages])
@@ -150,14 +151,14 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, cha
     }
     , [
         h('span.message-id', `${message.messageId}`),
-        h('span.message-flare', '🔥'),
-        h('span.message-good', '😀'),
+        h('img.message-flare', {props: {src: '/images/angry.png', width: 20}}),
+        h('img.message-good', {props: {src: '/images/smile.png', width: 20}}),
         h('span.message-contents', message.contents),
       ])
   }
 
   return h('div', [
-           V.header(channelId, `${numUsers} people in this channel`),
+           V.header(`${numUsers}人が${unilist[channelId]}を見ています`),
            h('form#post', {props: {action: ''}}, [
              h('input#post-text', {
                props: {type: 'text', placeholder: 'type here', autocomplete: 'off'},
