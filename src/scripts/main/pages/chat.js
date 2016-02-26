@@ -6,6 +6,7 @@ import V from '../view'
 import _ from 'lodash'
 import chroma from 'chroma-js'
 import {segment} from '../../lib/tiny-segmenter'
+import unilist from './list'
 
 
 function getReplyTos(text) {
@@ -157,7 +158,7 @@ function view({messages, selectedMessages, numUsers, currentInputtingScore}, cha
   }
 
   return h('div', [
-           V.header(channelId, `${numUsers} people in this channel`),
+           V.header(`${numUsers}人が${unilist[channelId]}を見ています`),
            h('form#post', {props: {action: ''}}, [
              h('input#post-text', {
                props: {type: 'text', placeholder: 'type here', autocomplete: 'off'},
