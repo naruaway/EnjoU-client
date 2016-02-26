@@ -72,7 +72,7 @@ const selectedMessages$ = actions.changeText$
   const currentInputtingScore$ = most.combineArray((text, wordScores) => {
       const words = segment(text).map(w => w.trim()).filter(w => w)
       return Math.round(words.map(word => `*${word}` in wordScores ? wordScores[`*${word}`] : 0).reduce((a, c) => a + c, 0) / words.length)
-    }, [actions.changeText$.merge(actions.postText$.constant('')), actions.wordScores$])::startsWith(0).map(n => Number.isNaN(n) ? 0 : n)
+    }, [actions.changeText$.merge(actions.postText$.constant('').delay(1)), actions.wordScores$])::startsWith(0).map(n => Number.isNaN(n) ? 0 : n)
 
 
   const newMessageMod$ = actions.newMessage$.map(message => messages => [message, ...messages])
