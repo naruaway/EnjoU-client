@@ -4,7 +4,7 @@
 ```bash
 npm install
 npm install -g gulp
-gulp build
+npm run build
 ```
 
 ## how to deploy
